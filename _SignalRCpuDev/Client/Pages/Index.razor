@@ -1,0 +1,33 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+
+<div>
+    <label>@_labelText</label>
+</div>
+
+@code {
+
+    private HubConnection _serviceHubConnection;
+    private string _labelText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //service hub
+        _serviceHubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/serviceHub"))
+            .Build();
+
+        //listener
+        _serviceHubConnection.On<string>("ReceiveText", text =>
+        {
+            _labelText = text;
+            StateHasChanged();
+        });
+        
+        //start hub connection
+        await _serviceHubConnection.StartAsync();
+        
+    }
+
+}
