@@ -1,23 +1,24 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using _SignalRCpuDev.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace _SignalRCpuDev.Server
 {
     public class SignalRCpuDevService : BackgroundService
     {
-        private HubConnection _serviceHubConnection;
+        private readonly IHubContext<ServiceHub> _hubContext;
+
+        public SignalRCpuDevService(IHubContext<ServiceHub> hubContext)
+        {
+            _hubContext = hubContext;
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _serviceHubConnection = new HubConnectionBuilder()
-                    .WithUrl($"http://127.0.0.1:5244/serviceHub") //change port to project port
-                    .Build();
-            
-            await _serviceHubConnection.StartAsync(stoppingToken);
-
             do
             {
                 //send current time every second
-                if (_serviceHubConnection != null)
-                    await _serviceHubConnection.InvokeAsync("SendText", DateTime.Now.ToString(), stoppingToken);
+                await _hubContext.Clients.All.SendAsync("ReceiveText", DateTime.Now.ToString());
 
                 await Task.Delay(1000, stoppingToken);
 
